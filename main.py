@@ -2,7 +2,6 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, CallbackContext, MessageHandler, filters
 import logging
 
-
 # Вставьте ваш токен здесь
 TOKEN = '7367725633:AAGUqv1h1PnEtGT5mYlPOaXUQtRczXfoHBc'
 
@@ -10,8 +9,8 @@ TOKEN = '7367725633:AAGUqv1h1PnEtGT5mYlPOaXUQtRczXfoHBc'
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO)
+
 # Прямая ссылка на изображение с Google Drive
-# Прямые ссылки на изображения с Google Drive
 google_drive_photo_links = {
     "Person1":
     "https://drive.google.com/uc?id=1gldtaAYaOyNR9tuCetGg_i5ScU8PL0fR",
@@ -110,7 +109,7 @@ people_info = {
         "пгт. Каланчак, Херсонская область\n\n"
         "1) Не умеет придумывать себе факты.\n"
         "2) Самый перспективный кандидат по производственной части.\n"
-        "3) Написала ЕГЭ в сумме по 3 предметам на 275баллов .\n\n"
+        "3) Написала ЕГЭ в сумме по 3 предметам на 275баллов.\n\n"
         "Девиз по жизни - «Выход есть всегда»!",
         "photo":
         google_drive_photo_links["Person7"]
@@ -132,6 +131,7 @@ def get_main_menu():
         [InlineKeyboardButton("Люля Кебаб", callback_data='Person5')],
         [InlineKeyboardButton("Владимирович Руслан", callback_data='Person6')],
         [InlineKeyboardButton("ТА Е МАЕ", callback_data='Person7')],
+        [InlineKeyboardButton("Выход", callback_data='exit')]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -146,14 +146,14 @@ def get_start_menu():
 # Обработчик команды /start
 async def start(update: Update, context: CallbackContext) -> None:
     # Отправляем приветственное сообщение с кнопкой "Start"
-    await update.message.reply_text('Привет! Нажмите "Start", чтобы начать.',
+    await update.message.reply_text('Вас приветствует Мама-Кодзилла! Нажмите "Start", чтобы начать.',
                                     reply_markup=get_start_menu())
 
 
 # Обработчик всех сообщений
 async def handle_message(update: Update, context: CallbackContext) -> None:
     # Отправляем приветственное сообщение с кнопкой "Start" при любом новом сообщении
-    await update.message.reply_text('Привет! Нажмите "Start", чтобы начать.',
+    await update.message.reply_text('Ооо, спасибо! Я рада приветствовать Вас снова! Нажмите "Start", чтобы начать.',
                                     reply_markup=get_start_menu())
 
 
@@ -171,8 +171,18 @@ async def button(update: Update, context: CallbackContext) -> None:
     # Если пользователь нажал "Start", отправляем главное меню
     if person == 'start':
         await query.edit_message_text(
-            text='Выберите человека, чтобы получить информацию о нем:',
+            text='ТрудКрут! Все работает!\nСегодня я познакомлю Вас с моими детками, они немного волнуются, потому что они создавали меня по ночам, и хотят, чтобы все работало так как они запланировали.\nМы студенческий цифровой отряд «КОДзилла», нами решено провести небольшую знакомку с Вами в цифровом поле, что из этого вышло? Давайте смотреть!\n\nВыберите человека, чтобы получить информацию о нем:',
             reply_markup=get_main_menu())
+        return
+
+    # Если пользователь нажал "Выход", завершение работы бота
+    if person == 'exit':
+        await context.bot.send_message(chat_id=query.message.chat_id,
+                                       text="КОДзилла устала, завершает работу. До свидания! Она была рада знакомству с Вами!\n\nЕсли хотите продолжить, отправьте приятное сообщение нашей Маме и она, может быть, Вам ответит!)")
+        await context.bot.delete_message(chat_id=query.message.chat_id,
+                                         message_id=query.message.message_id)
+        # Завершение работы приложения
+        context.application.stop()
         return
 
     info = people_info.get(person, {
@@ -237,6 +247,7 @@ def main() -> None:
         CallbackQueryHandler(back_to_menu, pattern='^back_to_menu$'))
     application.add_handler(
         CallbackQueryHandler(back_to_menu, pattern='^choose_another$'))
+    application.add_handler(CallbackQueryHandler(button, pattern='^exit$'))
 
     # Запускаем приложение
     application.run_polling()
